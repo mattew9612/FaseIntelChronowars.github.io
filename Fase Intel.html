@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>CRONOWARS TERMINAL</title>
+
+<style>
+body{
+  margin:0;
+  background:black;
+  color:#00ff00;
+  font-family:"Courier New", monospace;
+  overflow:hidden;
+}
+
+/* LOGIN */
+#login{
+  position:fixed;inset:0;
+  background:radial-gradient(circle,#001a00,black 60%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+#loginBox{
+  border:1px solid #00ff00;
+  padding:20px;
+  text-align:center;
+}
+
+input{
+  background:transparent;
+  border:none;
+  border-bottom:1px solid #00ff00;
+  color:#00ff00;
+  font-size:18px;
+  outline:none;
+  width:320px;
+}
+
+button{
+  margin-top:10px;
+  background:transparent;
+  border:1px solid #00ff00;
+  color:#00ff00;
+  padding:6px 12px;
+  cursor:pointer;
+}
+
+/* TERMINAL */
+#terminal{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+}
+
+
+/* CENTRATO FINALE */
+#output.centerFinal{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  font-size:22px;
+  width:100%;
+}
+
+/* HACK OVERLAY */
+#hackOverlay{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:999;
+}
+
+/* MATRIX */
+.matrix{
+  position:fixed;
+  top:-20px;
+  color:#00ff00;
+  font-size:14px;
+  opacity:0.7;
+  animation:fall 2.5s linear forwards;
+}
+
+@keyframes fall{
+  0%{transform:translateY(-20px);opacity:1}
+  100%{transform:translateY(120vh);opacity:0}
+}
+
+/* SHAKE */
+.shake{animation:shake .1s infinite;}
+@keyframes shake{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(2px,-2px)}
+  50%{transform:translate(-2px,2px)}
+  75%{transform:translate(2px,2px)}
+  100%{transform:translate(-2px,-2px)}
+}
+
+/* FLASH TEXT */
+.hackText{
+  position:absolute;
+  color:red;
+  font-size:18px;
+  font-family:Courier New;
+  animation:fade 1s forwards;
+}
+
+@keyframes fade{
+  from{opacity:1}
+  to{opacity:0}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div id="loginBox">
+    <div>ACCESSO TERMINALE</div>
+    <input id="pass" type="password" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter'){login()}">
+    <button onclick="login()">DECRIPTA</button>
+  </div>
+</div>
+
+<div id="hackOverlay"></div>
+
+<!-- TERMINAL -->
+<div id="terminal">
+  <div id="output"></div>
+  <input id="input" type="text">
+</div>
+
+<script>
+const output = document.getElementById("output");
+const input = document.getElementById("input");
+const overlay = document.getElementById("hackOverlay");
+
+let stage = 0;
+let agentShown = false;
+
+/* AGENTE M */
+const intro =
+"Sono l’agente sotto copertura M.\n" +
+"Vi contatto dal passato.\n" +
+"Il sistema è instabile.\n" +
+"Superate tutti i livelli o la rete collasserà.\n\n";
+
+const questions = [
+  {q:"Esiste solo quando fallisce la difesa.",a:"violazione sicurezza"},
+  {q:"È armata ma non combatte.",a:"guardia civile"},
+  {q:"Se è silenziosa è letale.",a:"operazione segreta"},
+  {q:"Non spara ma decide tutto.",a:"strategia militare"},
+  {q:"Cade senza essere colpito.",a:"effetto domino"},
+  {q:"Parte senza muoversi.",a:"ordine militare"},
+  {q:"Non ha soldati ma conquista territori.",a:"influenza politica"},
+  {q:"Missili invisibili e paura visibile.",a:"crisi cubana"},
+  {q:"Codice perfetto poi fallito.",a:"codice enigma"},
+  {q:"Operazione Europa.",a:"operazione overlord"},
+  {q:"Cortina che divide il mondo.",a:"cortina ferro"},
+  {q:"Due giganti di vetro e acciaio, simbolo di potere e lavoro, cadono in un mattino che cambia il mondo per sempre..",a:"torri gemelle"},
+  {q:"Da notte a giorno in un attimo.",a:"visore notturno"},
+  {q:"Osserva dal'alto.",a:"drone spia"},
+  {q:"Arrivo silenzioso, colpisco lontano, e non mi vedi mai partire. Una sola decisione e cambia tutto il campo di battaglia..",a:"attacco aereo"}
+];
+
+function login(){
+  const p = document.getElementById("pass").value.toLowerCase().trim();
+  if(p === "cronowars"){
+    document.getElementById("login").style.display="none";
+    start();
+  }
+}
+
+/* START */
+function start(){
+  document.getElementById("terminal").style.display="block";
+
+  output.innerText =
+    "ACCESSO CONCESSO...\n" +
+    "DECODIFICA SISTEMA IN CORSO...\n" +
+    "STABILIZZAZIONE CONNESSIONE...\n";
+
+  setTimeout(()=>{
+
+    if(!agentShown){
+      output.innerText = intro;
+      agentShown = true;
+
+      // 🔧 MODIFICA: 8 secondi
+      setTimeout(()=>{
+        ask();
+        startMatrixLoop();
+        startHackLoop();
+      }, 8000);
+
+      return;
+    }
+
+    ask();
+    startMatrixLoop();
+    startHackLoop();
+
+  }, 3000);
+}
+
+/* DOMANDE */
+function ask(){
+  if(stage >= questions.length) return;
+
+  const q = questions[stage];
+
+  const hint = "(" +
+    q.a.split(" ").map(w => w.length).join(",") +
+    ")";
+
+  output.innerText =
+    q.q + " " + hint + "\n> ";
+}
+
+/* INPUT */
+input.addEventListener("keydown", e=>{
+  if(e.key !== "Enter") return;
+
+  const v = input.value.toLowerCase().trim();
+  input.value="";
+
+  if(v === questions[stage].a){
+    stage++;
+
+    if(stage >= questions.length){
+      finalSequence();
+    } else {
+      ask();
+    }
+
+  } else {
+    const q = questions[stage];
+    output.innerText =
+      q.q +
+      " (" +
+      q.a.split(" ").map(w => w.length).join(",") +
+      ")\nACCESSO NEGATO\n> ";
+  }
+});
+
+/* MATRIX */
+function spawnMatrix(){
+  const d = document.createElement("div");
+  d.className="matrix";
+  d.style.left=Math.random()*100+"vw";
+
+  let chars="01ABCDEF";
+  let t="";
+
+  for(let i=0;i<20;i++)
+    t+=chars[Math.random()*chars.length|0]+"\n";
+
+  d.innerText=t;
+  document.body.appendChild(d);
+
+  setTimeout(()=>d.remove(),3000);
+}
+
+function startMatrixLoop(){
+  setInterval(()=>{
+    for(let i=0;i<5;i++) spawnMatrix();
+  },15000);
+}
+
+/* HACK EFFECTS */
+function startHackLoop(){
+  setInterval(()=>{
+    glitchEffect();
+    spawnHackText(["BREACH","ERROR","SCAN"][Math.random()*3|0]);
+  },4000);
+}
+
+function glitchEffect(){
+  document.body.style.filter =
+    `hue-rotate(${Math.random()*360}deg) contrast(${Math.random()*2})`;
+
+  document.body.classList.add("shake");
+
+  setTimeout(()=>{
+    document.body.classList.remove("shake");
+    document.body.style.filter="";
+  },200);
+}
+
+function spawnHackText(txt){
+  const d=document.createElement("div");
+  d.className="hackText";
+  d.innerText=txt;
+
+  d.style.left=Math.random()*90+"vw";
+  d.style.top=Math.random()*90+"vh";
+
+  overlay.appendChild(d);
+
+  setTimeout(()=>d.remove(),900);
+}
+
+/* FINALE */
+function finalSequence(){
+
+  output.classList.add("centerFinal");
+
+  let finalMsg =
+  "TERMINALE HACKERATO\nMISSIONE COMPIUTA\nCODICE: 97864231\n↑ ↓ ↓ ↑\n";
+
+  let time = 60;
+
+  output.innerText = finalMsg + "\nCOUNTDOWN: " + time;
+
+  let timer = setInterval(()=>{
+
+    time--;
+
+    output.innerText =
+      finalMsg +
+      "\nCOUNTDOWN: " + time +
+      "\nSYSTEM OVERRIDE ACTIVE";
+
+    spawnHackText("ACCESS GRANTED");
+    glitchEffect();
+
+    document.body.style.filter =
+      `hue-rotate(${Math.random()*360}deg) contrast(2) brightness(1.5)`;
+
+    if(time <= 0){
+      clearInterval(timer);
+      startFinalChaos();
+    }
+
+  },1000);
+}
+
+/* CHAOS FINALE */
+function startFinalChaos(){
+
+  let i = setInterval(()=>{
+    spawnMatrix();
+    spawnHackText("BREACH SYSTEM CORE");
+    glitchEffect();
+
+    document.body.style.filter =
+      `hue-rotate(${Math.random()*360}deg) contrast(3) brightness(2)`;
+
+  },60);
+
+  setTimeout(()=>{
+    clearInterval(i);
+    document.body.innerHTML = "";
+    document.body.style.background = "black";
+  },8000);
+}
+
+</script>
+
+</body>
+</html>
